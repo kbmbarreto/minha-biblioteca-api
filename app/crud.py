@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session
-from . import models, schemas
+import app.models
+import app.schemas
 from datetime import datetime
+
+from app import models, schemas
+
 
 def get_books(db: Session):
     return db.query(models.Book).filter(models.Book.is_deleted == False).all()
@@ -9,7 +13,9 @@ def get_book(db: Session, book_id: int):
     return db.query(models.Book).filter(models.Book.id == book_id).first()
 
 def create_book(db: Session, book: schemas.BookCreate):
-    db_book = models.Book(**book.dict(), updated_date=datetime.utcnow())
+    data = book.dict(exclude_unset=True)
+    data["updated_date"] = datetime.utcnow()
+    db_book = models.Book(**data)
     db.add(db_book)
     db.commit()
     db.refresh(db_book)
